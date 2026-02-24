@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Entornos virtuales
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Datos (no subir al repositorio)
+data/
+*.csv
+*.xlsx
+*.json
+
+# Modelos entrenados (archivos grandes)
+models/*.pkl
+models/*.h5
+*.pkl
+*.h5
+
+# Logs y resultados temporales
+logs/
+*.log
+breast_cancer_model_*.pkl
+breast_cancer_neural_model_*.h5
+model_metadata_*.json
+neural_model_metadata_*.json
+best_neural_model.h5
+
+# IDEs y editores
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Kaggle
+kaggle.json
+.kaggle/
