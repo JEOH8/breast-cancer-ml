@@ -220,4 +220,4 @@ Este proyecto está bajo la licencia MIT. Ver el archivo [LICENSE](LICENSE) para
 
 ---
 
-<p align="center">Desarrollado como parte de mi portafolio de Data Science & Machine Learning</p>
+<p align="center">Este sistema puede asistir al personal médico en la priorización de casos, reduciendo el tiempo de diagnóstico en contextos con recursos limitados.</p>
