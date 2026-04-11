@@ -93,23 +93,72 @@ def predict_batch(df: pd.DataFrame) -> pd.DataFrame:
     df_result["Prob. Maligno (%)"]    = (probas[:, 1] * 100).round(2)
     df_result["Prob. Benigno (%)"]    = (probas[:, 0] * 100).round(2)
     df_result["Confianza (%)"]        = (np.max(probas, axis=1) * 100).round(2)
+    df_result["Nivel de Riesgo"]      = [
+        get_risk_level(p)["level"] for p in probas[:, 1]
+    ]
+    df_result["Recomendación"]        = [
+        get_risk_level(p)["recommendation"] for p in probas[:, 1]
+    ]
     return df_result
 
+def get_risk_level(prob_malignant: float) -> dict:
+    """
+    Determina el nivel de riesgo clínico según la probabilidad de malignidad.
+
+    Umbrales:
+      < 20%  → Benigno probable     → Seguimiento rutinario
+      20–50% → Zona de revisión     → Revisión prioritaria recomendada
+      ≥ 50%  → Maligno probable     → Consulta urgente con oncólogo
+    """
+    p = prob_malignant
+    if p >= 0.50:
+        return {
+            "level":          "MALIGNO PROBABLE",
+            "color_bar":      "#e74c3c",
+            "recommendation": "CONSULTA URGENTE CON ONCÓLOGO",
+            "icon":           "🔴",
+            "streamlit_fn":   "error",
+        }
+    elif p >= 0.20:
+        return {
+            "level":          "ZONA DE REVISIÓN",
+            "color_bar":      "#f39c12",
+            "recommendation": "REVISIÓN PRIORITARIA RECOMENDADA",
+            "icon":           "🟡",
+            "streamlit_fn":   "warning",
+        }
+    else:
+        return {
+            "level":          "BENIGNO PROBABLE",
+            "color_bar":      "#2ecc71",
+            "recommendation": "Seguimiento rutinario",
+            "icon":           "🟢",
+            "streamlit_fn":   "success",
+        }
+
+
 def gauge_chart(prob_malignant: float) -> go.Figure:
-    """Medidor visual de probabilidad."""
-    color = "#e74c3c" if prob_malignant >= 0.5 else "#2ecc71"
+    """
+    Medidor visual de probabilidad con tres zonas clínicas:
+      Verde  : 0–20%   → Benigno probable
+      Amarillo: 20–50% → Zona de revisión prioritaria
+      Rojo   : 50–100% → Maligno probable — consulta urgente
+    """
+    risk = get_risk_level(prob_malignant)
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=prob_malignant * 100,
         number={"suffix": "%", "font": {"size": 36}},
         title={"text": "Probabilidad de Malignidad", "font": {"size": 16}},
         gauge={
-            "axis":  {"range": [0, 100], "tickwidth": 1},
-            "bar":   {"color": color},
+            "axis": {"range": [0, 100], "tickwidth": 1,
+                     "tickvals": [0, 20, 50, 100],
+                     "ticktext": ["0%", "20%", "50%", "100%"]},
+            "bar":  {"color": risk["color_bar"]},
             "steps": [
-                {"range": [0,  40], "color": "#d5f5e3"},
-                {"range": [40, 60], "color": "#fdebd0"},
-                {"range": [60, 100], "color": "#fadbd8"},
+                {"range": [0,  20],  "color": "#d5f5e3"},   # verde claro
+                {"range": [20, 50],  "color": "#fdebd0"},   # amarillo claro
+                {"range": [50, 100], "color": "#fadbd8"},   # rojo claro
             ],
             "threshold": {
                 "line": {"color": "black", "width": 3},
@@ -118,7 +167,7 @@ def gauge_chart(prob_malignant: float) -> go.Figure:
             },
         },
     ))
-    fig.update_layout(height=280, margin=dict(t=40, b=0, l=20, r=20))
+    fig.update_layout(height=300, margin=dict(t=40, b=0, l=20, r=20))
     return fig
 
 
@@ -214,22 +263,28 @@ with tab1:
 
         with col_result:
             st.markdown("### Resultado")
-            if result["prediction"] == "Maligno":
-                st.error(f"🔴 **{result['prediction']}**")
-                st.markdown("**Recomendación:** CONSULTAR CON ONCÓLOGO")
-            else:
-                st.success(f"🟢 **{result['prediction']}**")
-                st.markdown("**Recomendación:** Seguimiento rutinario")
+            risk = get_risk_level(result["prob_malignant"])
 
+            if risk["streamlit_fn"] == "error":
+                st.error(f"{risk['icon']} **{risk['level']}**")
+            elif risk["streamlit_fn"] == "warning":
+                st.warning(f"{risk['icon']} **{risk['level']}**")
+            else:
+                st.success(f"{risk['icon']} **{risk['level']}**")
+
+            st.markdown(f"**Recomendación:** {risk['recommendation']}")
             st.markdown("---")
             st.metric("Prob. Maligno",  f"{result['prob_malignant']*100:.2f}%")
             st.metric("Prob. Benigno",  f"{result['prob_benign']*100:.2f}%")
             st.metric("Confianza",      f"{result['confidence']*100:.2f}%")
-
             st.markdown("---")
             st.caption(
-                "El modelo aplica internamente StandardScaler + PCA (17 componentes, "
-                "99.1% varianza) + Regresión Logística optimizada con Optimización Bayesiana."
+                "**Umbrales clínicos:** < 20% → Seguimiento rutinario · "
+                "20–50% → Revisión prioritaria · ≥ 50% → Consulta urgente con oncólogo"
+            )
+            st.caption(
+                "El modelo aplica StandardScaler + PCA (17 componentes, 99.1% varianza) "
+                "+ Regresión Logística optimizada con Optimización Bayesiana."
             )
 
 
@@ -303,8 +358,8 @@ with tab2:
                     st.plotly_chart(fig_dist, use_container_width=True)
 
                     # Tabla de resultados
-                    result_cols = ["Diagnóstico", "Prob. Maligno (%)",
-                                   "Prob. Benigno (%)", "Confianza (%)"]
+                    result_cols = ["Diagnóstico", "Nivel de Riesgo", "Recomendación",
+                                   "Prob. Maligno (%)", "Prob. Benigno (%)", "Confianza (%)"]
                     extra_cols  = [c for c in df_input.columns if c not in feature_names]
                     display_cols = extra_cols + result_cols
                     st.dataframe(
