@@ -38,6 +38,7 @@ from models import (split_data, train_all_models, plot_comparison,
                     cross_validate_all_models, plot_cv_vs_holdout)
 from optimization import bayesian_optimization, cross_validate, compare_models
 from neural_network import train_neural_network, save_model, verify_no_leakage_nn
+from ablation_study import run_ablation_study, plot_ablation_results, print_summary_table
 
 
 def parse_args():
@@ -48,6 +49,8 @@ def parse_args():
                         help="Omite el análisis exploratorio")
     parser.add_argument("--skip-nn",  action="store_true",
                         help="Omite la red neuronal")
+    parser.add_argument("--ablation", action="store_true",
+                        help="Ejecuta ablation study de arquitecturas de red neuronal")
     return parser.parse_args()
 
 
@@ -145,6 +148,15 @@ def main():
                    X_train_pca, pca_optimal, opt_metrics)
     else:
         print("\n[9/9] Red neuronal omitida (--skip-nn)")
+
+    # ── Ablation study (opcional) ────────────────────────────────────────
+    if args.ablation:
+        print("\n[Ablation] Ejecutando ablation study de arquitecturas...")
+        results_df, histories = run_ablation_study(
+            X_train_pca, X_test_pca, y_train, y_test
+        )
+        plot_ablation_results(results_df, histories)
+        print_summary_table(results_df)
 
     # ── Resumen final ─────────────────────────────────────────────────────
     print("\n" + "=" * 70)

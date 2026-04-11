@@ -451,8 +451,93 @@ with tab3:
         )
 
     st.divider()
+
+    # ── Ablation Study ────────────────────────────────────────────────────
+    st.subheader("🔬 Ablation Study — Arquitecturas de Red Neuronal")
+    st.markdown(
+        "Evaluación comparativa de 4 arquitecturas de red neuronal bajo **condiciones idénticas** "
+        "(mismas semillas, callbacks, pesos de clase, datos PCA) para determinar "
+        "cuánto aporta cada capa al rendimiento del modelo."
+    )
+
+    col_ab1, col_ab2 = st.columns([1, 1])
+
+    with col_ab1:
+        st.markdown("#### Resultados")
+        ablation_data = {
+            "Arquitectura": [
+                "A — 64→32→16→1 ⭐ (Baseline)",
+                "B — 32→16→1 (Simple)",
+                "C — 128→64→32→1 (Grande)",
+                "D — 64→1 (1 capa)",
+            ],
+            "Parámetros": [4225, 1313, 13569, 1473],
+            "Accuracy":   [0.9912, 0.9825, 0.9825, 0.9825],
+            "Precision":  [1.0000, 0.9762, 0.9762, 1.0000],
+            "Recall":     [0.9762, 0.9762, 0.9762, 0.9524],
+            "F1-Score":   [0.9880, 0.9762, 0.9762, 0.9756],
+            "AUC":        [0.9970, 0.9960, 0.9964, 0.9974],
+        }
+        ablation_df = pd.DataFrame(ablation_data)
+        st.dataframe(ablation_df, use_container_width=True)
+
+        # Gráfico de barras F1 por arquitectura
+        fig_ab = go.Figure()
+        colors_ab = ["#2ecc71", "#3498db", "#e67e22", "#9b59b6"]
+        for i, (arch, f1, params) in enumerate(zip(
+            ablation_data["Arquitectura"],
+            ablation_data["F1-Score"],
+            ablation_data["Parámetros"]
+        )):
+            fig_ab.add_trace(go.Bar(
+                name=arch.split("(")[0].strip(),
+                x=[arch.split("(")[0].strip()],
+                y=[f1],
+                marker_color=colors_ab[i],
+                text=f"F1={f1:.4f}<br>{params:,} params",
+                textposition="outside",
+            ))
+        fig_ab.update_layout(
+            title="F1-Score por Arquitectura",
+            yaxis=dict(range=[0.96, 1.002], title="F1-Score"),
+            showlegend=False,
+            height=320,
+            margin=dict(t=50, b=20),
+        )
+        st.plotly_chart(fig_ab, use_container_width=True)
+
+    with col_ab2:
+        st.markdown("#### Conclusiones del Ablation Study")
+        st.success(
+            "**Diferencia máxima entre arquitecturas: 1.23% en F1**\n\n"
+            "La arquitectura tiene impacto **mínimo** en este dataset. "
+            "Incluso la red más simple (B, 1,313 parámetros) y la más compleja "
+            "(C, 13,569 parámetros) obtienen el mismo F1 de 0.9762."
+        )
+        st.info(
+            "**¿Por qué?** El Wisconsin Breast Cancer Dataset presenta clases "
+            "muy bien separadas en el espacio PCA — los tumores benignos y malignos "
+            "forman grupos claramente distintos con poco solapamiento. "
+            "Cuando los datos son tan separables, cualquier arquitectura razonable "
+            "logra capturar los patrones relevantes.\n\n"
+            "**Implicación clínica:** Para datasets tabulares de escala moderada "
+            "con alta separabilidad, la complejidad del modelo no es el factor crítico. "
+            "La Regresión Logística optimizada (sin capas ocultas) iguala a todas "
+            "las arquitecturas neuronales en las métricas clínicas clave."
+        )
+        st.warning(
+            "**Nota sobre imputación por mediana:**\n\n"
+            "El dataset Wisconsin no presenta valores nulos en las 30 características "
+            "morfológicas. El único valor nulo era `Unnamed: 32`, una columna "
+            "completamente vacía eliminada en el preprocesamiento estructural. "
+            "La imputación por mediana existe como salvaguarda preventiva "
+            "pero **nunca se activó** en este pipeline."
+        )
+
+    st.divider()
     st.markdown(
         "**Repositorio completo:** [github.com/JEOH8/breast-cancer-ml](https://github.com/JEOH8/breast-cancer-ml)  \n"
+        "**Demo interactiva:** [breast-cancer-ml-jeoh1.streamlit.app](https://breast-cancer-ml-jeoh1.streamlit.app)  \n"
         "**Desarrollado por:** Juan Esteban Ospina — Ingeniero Biomédico  \n"
         "**Stack:** Python · scikit-learn · TensorFlow · Streamlit · Plotly"
     )
