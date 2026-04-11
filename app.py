@@ -331,6 +331,26 @@ with tab2:
             else:
                 st.dataframe(df_input.head(), use_container_width=True)
 
+                # Verificar valores faltantes en las features
+                missing_in_features = df_input[feature_names].isnull().sum()
+                missing_cols_data = missing_in_features[missing_in_features > 0]
+
+                if len(missing_cols_data) > 0:
+                    st.warning(
+                        f"⚠️ **Se detectaron valores faltantes en {len(missing_cols_data)} "
+                        f"característica(s):**\n\n" +
+                        "\n".join([f"- `{col}`: {n} valor(es) faltante(s)"
+                                   for col, n in missing_cols_data.items()]) +
+                        "\n\n**Limitación clínica importante:** Los valores faltantes serán "
+                        "imputados automáticamente con la **mediana del dataset de entrenamiento** "
+                        "(Wisconsin, n=455). En un contexto diagnóstico real, imputar "
+                        "características morfológicas con valores poblacionales puede introducir "
+                        "sesgo. Se recomienda completar los datos antes de obtener una predicción "
+                        "confiable."
+                    )
+                else:
+                    st.success("✓ Sin valores faltantes — datos completos para predicción.")
+
                 if st.button("🔍 Predecir todos", type="primary"):
                     with st.spinner("Procesando..."):
                         df_result = predict_batch(df_input)
