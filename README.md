@@ -3,14 +3,14 @@
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](https://www.python.org/)
 [![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.3%2B-orange?logo=scikit-learn)](https://scikit-learn.org/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.13%2B-ff6f00?logo=tensorflow)](https://www.tensorflow.org/)
-[![Streamlit](https://img.shields.io/badge/Demo-Streamlit-ff4b4b?logo=streamlit)](https://breast-cancer-ml.streamlit.app)
+[![Streamlit](https://img.shields.io/badge/Demo-Streamlit-ff4b4b?logo=streamlit)](https://breast-cancer-ml-jeoh1.streamlit.app/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 Sistema de clasificación binaria para diagnóstico asistido de cáncer de mama (benigno/maligno) sobre el **Wisconsin Breast Cancer Dataset**. El pipeline incluye EDA, PCA, comparativa de 5 clasificadores, optimización bayesiana de hiperparámetros, red neuronal profunda y verificación explícita de data leakage.
 
 > Este sistema puede asistir al personal médico en la priorización de casos, reduciendo el tiempo de diagnóstico en contextos con recursos limitados.
 
-🔗 **[Demo interactiva en Streamlit](https://breast-cancer-ml.streamlit.app)** — predicción manual por sliders y predicción por lote (CSV).
+🔗 **[Demo interactiva en Streamlit](https://breast-cancer-ml-jeoh1.streamlit.app/)** — predicción manual por sliders y predicción por lote (CSV).
 
 ---
 
